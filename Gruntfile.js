@@ -17,8 +17,8 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['lib/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
+        src: ['assets/js/<%= pkg.name %>.js'],
+        dest: 'public/js/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/<%= pkg.name %>.min.js'
+        dest: 'public/js/<%= pkg.name %>.min.js'
       }
     },
     jshint: {
@@ -50,11 +50,17 @@ module.exports = function(grunt) {
         src: 'Gruntfile.js'
       },
       lib_test: {
-        src: ['lib/**/*.js', 'test/**/*.js']
+        src: ['assets/js/**/*.js', 'test/**/*.js']
       }
     },
-    qunit: {
-      files: ['test/**/*.html']
+    compass: {
+        dist: {                   // Target
+        options: {              // Target options
+          sassDir: 'assets/styles',
+          cssDir: 'public/styles',
+          environment: 'development'
+        }
+      },
     },
     watch: {
       gruntfile: {
@@ -64,6 +70,19 @@ module.exports = function(grunt) {
       lib_test: {
         files: '<%= jshint.lib_test.src %>',
         tasks: ['jshint:lib_test', 'qunit']
+      },
+      styles: {
+        files: 'assets/styles/**/*.scss',
+        tasks: ['compass'],
+        options: {
+          livereload: true
+        }
+      },
+      html: {
+        files: 'views/**/*.ejs',
+        options: {
+          livereload: true
+        }
       }
     }
   });
@@ -71,11 +90,11 @@ module.exports = function(grunt) {
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-compass');
 
   // Default task.
-  grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'concat', 'uglify', 'compass']);
 
 };

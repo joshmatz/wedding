@@ -1,0 +1,15 @@
+@import "compass";
+@import "compass/reset";
+@import "import";
+
+.section {
+	padding-top: 4em;
+	padding-bottom: 4em;
+	text-align: center;
+	background-color: #f1f1f1;
+
+	:nth-child(2n) {
+		background-color: #444;
+		color: #f1f1f1;
+	}
+}
