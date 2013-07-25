@@ -16,7 +16,7 @@ module.exports.policies = {
   // (`true` allows public access) 
 	'*': 'authenticated',
 
-	'auth': {
+	AdminController: {
 		'*': true
 	}
 

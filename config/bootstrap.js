@@ -82,12 +82,26 @@ module.exports.bootstrap = function (cb) {
 					if (user.password != password) { 
 						return done(null, false, { message: 'Invalid password' });
 					}
-					
+
 					return done(null, user);
 				})
 			});
 		}
 	));
+
+
+	module.exports = {
+	  
+	  // Custom express middleware - we use this to register the passport middleware
+		express: {
+			customMiddleware: function(app)
+			{
+				app.use(passport.initialize());
+				app.use(passport.session());
+			}
+		}
+	 
+	};
 
   // It's very important to trigger this callack method when you are finished 
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
