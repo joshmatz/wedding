@@ -37,7 +37,7 @@ module.exports.routes = {
   },
 
   '/admin/login': {
-    view: 'admin/login',
+    action: 'login',
     controller: 'admin'
   }
 
