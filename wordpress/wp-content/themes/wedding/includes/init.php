@@ -26,6 +26,11 @@ add_theme_support( 'genesis-footer-widgets', 3 );
 //* Add post support for the following
 add_theme_support( 'post-formats', array('gallery', 'link', 'image', 'quote', 'video', 'audio') );
 
+//* Replace default style sheet
+add_filter( 'stylesheet_uri', 'custom_replace_default_style_sheet', 10, 2 );
+function custom_replace_default_style_sheet() {
+	return CHILD_URL . '/assets/css/main.css';
+}
 
 //add_action('init', 'flush_post_rules' );
 function flush_post_rules() {
