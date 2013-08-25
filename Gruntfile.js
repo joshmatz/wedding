@@ -1,445 +1,427 @@
-/**
- * Gruntfile
- *
- * If you created your Sails app with `sails new foo --linker`, 
- * the following files will be automatically injected (in order)
- * into the EJS and HTML files in your `views` and `assets` folders.
- *
- * At the top part of this file, you'll find a few of the most commonly
- * configured options, but Sails' integration with Grunt is also fully
- * customizable.  If you'd like to work with your assets differently 
- * you can change this file to do anything you like!
- *
- * More information on using Grunt to work with static assets:
- * http://gruntjs.com/configuring-tasks
- */
-
-module.exports = function (grunt) {
+module.exports = function(grunt) {
 
 
-
-  /**
-   * CSS files to inject in order
-   * (uses Grunt-style wildcard/glob/splat expressions)
-   *
-   * By default, Sails also supports LESS in development and production.
-   * To use SASS/SCSS, Stylus, etc., edit the `sails-linker:devStyles` task 
-   * below for more options.  For this to work, you may need to install new 
-   * dependencies, e.g. `npm install grunt-contrib-sass`
-   */
-
-  var cssFilesToInject = [
-    'linker/**/*.css'
-  ];
-
-
-  /**
-   * Javascript files to inject in order
-   * (uses Grunt-style wildcard/glob/splat expressions)
-   *
-   * To use client-side CoffeeScript, TypeScript, etc., edit the 
-   * `sails-linker:devJs` task below for more options.
-   */
-
-  var jsFilesToInject = [
-
-    // Below, as a demonstration, you'll see the built-in dependencies 
-    // linked in the proper order order
-
-    // Bring in the socket.io client
-    'linker/js/socket.io.js',
-
-    // then beef it up with some convenience logic for talking to Sails.js
-    'linker/js/sails.io.js',
-
-    // A simpler boilerplate library for getting you up and running w/ an
-    // automatic listener for incoming messages from Socket.io.
-    'linker/js/app.js',
-
-    // *->    put other dependencies here   <-*
-
-    // All of the rest of your app scripts imported here
-    'linker/**/*.js'
-  ];
+	/**
+	 * Putting these at the top allow us to quickly see what plugins our 
+	 * Grunt process is loading.
+	 */
+	grunt.loadNpmTasks('grunt-contrib-compass');
+	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-contrib-copy');
+	grunt.loadNpmTasks('grunt-contrib-imagemin');
+	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-svg2png');
+	grunt.loadNpmTasks('grunt-svgmin');
+	grunt.loadNpmTasks('grunt-preprocess');
+	grunt.loadNpmTasks('grunt-env');
 
 
-  /**
-   * Client-side HTML templates are injected using the sources below
-   * The ordering of these templates shouldn't matter.
-   * (uses Grunt-style wildcard/glob/splat expressions)
-   * 
-   * By default, Sails uses JST templates and precompiles them into 
-   * functions for you.  If you want to use jade, handlebars, dust, etc.,
-   * edit the relevant sections below.
-   */
+	grunt.initConfig({
 
-  var templateFilesToInject = [
-    'linker/**/*.html'
-  ];
+		/**
+		 * Let's set up environment variables that we can change rather than editing 
+		 * all our settings each time we want to change a build directory or something.
+		 * We can access these via Grunt's template strings: 
+		 * https://github.com/gruntjs/grunt/wiki/grunt.template
+		 *
+		 * We could use this with or without the 'grunt-env' plugin, but we'll use the plugin 
+		 * so we can dynamically change things when we preprocess our files (like using concatenated 
+		 * JavaScript or not)
+		 * https://github.com/jsoverson/grunt-env/
+		 * 
+		 */
+		env: {
+			options: {
+				source: {
+					root: 'site/source',
+					assets: 'site/source/assets'
+				},
+				development: {
+					root: 'site/development',
+					assets: 'site/development/assets'
+				},
+				staging: {
+					root: 'site/staging',
+					assets: 'site/staging/assets'
+				},
+				production: {
+					root: 'site/production',
+					assets: 'site/production/assets'
+				}
+			},
+			development: {
+				NODE_ENV: 'DEVELOPMENT'
+			},
+			staging: {
+				NODE_ENV: 'STAGING'
+			},
+			production: {
+				NODE_ENV: 'PRODUCTION'
+			}
+		},
 
+		pkg: grunt.file.readJSON('package.json'),
 
-
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  //
-  // DANGER:
-  //
-  // With great power comes great responsibility.
-  //
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////
-
-  // Modify css file injection paths to use 
-  cssFilesToInject = cssFilesToInject.map(function (path) {
-    return '.tmp/public/' + path;
-  });
-
-  // Modify js file injection paths to use 
-  jsFilesToInject = jsFilesToInject.map(function (path) {
-    return '.tmp/public/' + path;
-  });
-  
-  
-  templateFilesToInject = templateFilesToInject.map(function (path) {
-    return 'assets/' + path;
-  });
-
-
-  // Get path to core grunt dependencies from Sails
-  var depsPath = grunt.option('gdsrc') || 'node_modules/sails/node_modules';
-  grunt.loadTasks(depsPath + '/grunt-contrib-clean/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-copy/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-concat/tasks');
-  grunt.loadTasks(depsPath + '/grunt-sails-linker/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-jst/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-watch/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-uglify/tasks');
-  grunt.loadTasks(depsPath + '/grunt-contrib-cssmin/tasks');
-  grunt.loadNpmTasks('grunt-contrib-compass');
-
-  // Project configuration.
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-
-    copy: {
-      dev: {
-        files: [
-          {
-          expand: true,
-          cwd: './assets',
-          src: ['**/*'],
-          dest: '.tmp/public'
-        }
-        ]
-      },
-      build: {
-        files: [
-          {
-          expand: true,
-          cwd: '.tmp/public',
-          src: ['**/*'],
-          dest: 'www'
-        }
-        ]
-      }
-    },
-
-    clean: {
-      dev: ['.tmp/public/**'],
-      build: ['www']
-    },
-
-    jst: {
-      dev: {
-        options: {
-          templateSettings: {
-            interpolate: /\{\{(.+?)\}\}/g
-          }
-        },
-        files: {
-          '.tmp/public/jst.js': templateFilesToInject
-        }
-      }
-    },
-
-    compass: {
-      dev: {
-        options: {
-          sassDir: 'assets/styles',
-          cssDir: '.tmp/public/styles',
-          environment: 'development'
-        }
-      }
-    },
-
-    concat: {
-      js: {
-        src: jsFilesToInject,
-        dest: '.tmp/public/concat/production.js'
-      },
-      css: {
-        src: cssFilesToInject,
-        dest: '.tmp/public/concat/production.css'
-      }
-    },
-
-    uglify: {
-      dist: {
-        src: ['.tmp/public/concat/production.js'],
-        dest: '.tmp/public/min/production.js'
-      }
-    },
-
-    cssmin: {
-      dist: {
-        src: ['.tmp/public/concat/production.css'],
-        dest: '.tmp/public/min/production.css'
-      }
-    },
-
-    'sails-linker': {
-
-      devJs: {
-        options: {
-          startTag: '<!--SCRIPTS-->',
-          endTag: '<!--SCRIPTS END-->',
-          fileTmpl: '<script src="%s"></script>',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          '.tmp/public/**/*.html': jsFilesToInject,
-          'views/**/*.html': jsFilesToInject,
-          'views/**/*.ejs': jsFilesToInject
-        }
-      },
-
-      prodJs: {
-        options: {
-          startTag: '<!--SCRIPTS-->',
-          endTag: '<!--SCRIPTS END-->',
-          fileTmpl: '<script src="%s"></script>',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          '.tmp/public/**/*.html': ['.tmp/public/min/production.js'],
-          'views/**/*.html': ['.tmp/public/min/production.js'],
-          'views/**/*.ejs': ['.tmp/public/min/production.js']
-        }
-      },
-
-      devStyles: {
-        options: {
-          startTag: '<!--STYLES-->',
-          endTag: '<!--STYLES END-->',
-          fileTmpl: '<link rel="stylesheet" href="%s">',
-          appRoot: '.tmp/public'
-        },
-
-        // cssFilesToInject defined up top
-        files: {
-          '.tmp/public/**/*.html': cssFilesToInject,
-          'views/**/*.html': cssFilesToInject,
-          'views/**/*.ejs': cssFilesToInject
-        }
-      },
-
-      prodStyles: {
-        options: {
-          startTag: '<!--STYLES-->',
-          endTag: '<!--STYLES END-->',
-          fileTmpl: '<link rel="stylesheet" href="%s">',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          '.tmp/public/index.html': ['.tmp/public/min/production.css'],
-          'views/**/*.html': ['.tmp/public/min/production.css'],
-          'views/**/*.ejs': ['.tmp/public/min/production.css']
-        }
-      },
-
-      // Bring in JST template object
-      devTpl: {
-        options: {
-          startTag: '<!--TEMPLATES-->',
-          endTag: '<!--TEMPLATES END-->',
-          fileTmpl: '<script type="text/javascript" src="%s"></script>',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          '.tmp/public/index.html': ['.tmp/public/jst.js'],
-          'views/**/*.html': ['.tmp/public/jst.js'],
-          'views/**/*.ejs': ['.tmp/public/jst.js']
-        }
-      },
+		/**
+		 * We use this task to switch between versions of code that can vary from dev to production.
+		 * There's not too much to it, but documentation is available:
+		 * https://github.com/jsoverson/grunt-preprocess/
+		 */
+		preprocess: {
+			development: {
+				src: '<%= env.options.source.root %>/index.html',
+				dest: '<%= env.options.development.root %>/index.html'
+			},
+			staging: {
+				src: '<%= env.options.source.root %>/index.html',
+				dest: '<%= env.options.staging.root %>/index.html'
+			},
+			production: {
+				src: '<%= env.options.source.root %>/index.html',
+				dest: '<%= env.options.production.root %>/index.html'
+			}
+		},
 
 
-      /*******************************************
-       * Jade linkers (TODO: clean this up)
-       *******************************************/
-
-      devJsJADE: {
-        options: {
-          startTag: '// SCRIPTS',
-          endTag: '// SCRIPTS END',
-          fileTmpl: 'script(type="text/javascript", src="%s")',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          'views/**/*.jade': jsFilesToInject
-        }
-      },
-
-      prodJsJADE: {
-        options: {
-          startTag: '// SCRIPTS',
-          endTag: '// SCRIPTS END',
-          fileTmpl: 'script(type="text/javascript", src="%s")',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          'views/**/*.jade': ['.tmp/public/min/production.js']
-        }
-      },
-
-      devStylesJADE: {
-        options: {
-          startTag: '// STYLES',
-          endTag: '// STYLES END',
-          fileTmpl: 'link(rel="stylesheet", href="%s")',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          'views/**/*.jade': cssFilesToInject
-        }
-      },
-
-      prodStylesJADE: {
-        options: {
-          startTag: '// STYLES',
-          endTag: '// STYLES END',
-          fileTmpl: 'link(rel="stylesheet", href="%s")',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          'views/**/*.jade': ['.tmp/public/min/production.css']
-        }
-      },
-
-      // Bring in JST template object
-      devTplJADE: {
-        options: {
-          startTag: '// TEMPLATES',
-          endTag: '// TEMPLATES END',
-          fileTmpl: 'script(type="text/javascript", src="%s")',
-          appRoot: '.tmp/public'
-        },
-        files: {
-          'views/**/*.jade': ['.tmp/public/jst.js']
-        }
-      }
-      /************************************
-       * Jade linker end
-       ************************************/
-    },
-
-    watch: {
-      api: {
-
-        // API files to watch:
-        files: ['api/**/*']
-      },
-      assets: {
-
-        // Assets to watch:
-        files: ['assets/**/*'],
-
-        // When assets are changed:
-        tasks: ['compileAssets', 'linkAssets']
-      }
-    }
-  });
-
-  // When Sails is lifted:
-  grunt.registerTask('default', [
-    'compileAssets',
-    'linkAssets',
-    'watch'
-  ]);
-
-  grunt.registerTask('compileAssets', [
-    'clean:dev',
-    'jst:dev',
-    'compass',
-    'copy:dev'
-  ]);
-
-  grunt.registerTask('linkAssets', [
-
-    // Update link/script/template references in `assets` index.html
-    'sails-linker:devJs',
-    'sails-linker:devStyles',
-    'sails-linker:devTpl',
-    'sails-linker:devJsJADE',
-    'sails-linker:devStylesJADE',
-    'sails-linker:devTplJADE'
-  ]);
+		/**
+		 * We'll run svg2png on our regular assets folder and convert everything there.
+		 * Documentation: https://github.com/dbushell/grunt-svg2png
+		 */
+		svg2png: {
+			all: {
+				// specify files in array format with multiple src-dest mapping
+				files: [
+					// rasterize all SVG files in "img" and its subdirectories to "img/png"
+					// rasterize SVG file to same directory
+					{ src: ['<%= env.options.source.assets %>/img/**/*.svg'] }
+				]
+			}
+		},
 
 
-  // Build the assets into a web accessible folder.
-  // (handy for phone gap apps, chrome extensions, etc.)
-  grunt.registerTask('build', [
-    'compileAssets',
-    'linkAssets',
-    'clean:build',
-    'copy:build'
-  ]);
+		/**
+		 * If you run into errors while optimizing the images, be sure to check 
+		 * your version of Node and make sure it's the latest stable version.
+		 * It can be finicky like that.
+		 * View the documentation at: https://github.com/gruntjs/grunt-contrib-imagemin
+		 */
+		imagemin: {
+			replace: {
+				files: [{
+					expand: true,
+					cwd: '<%= env.options.source.assets %>/img',
+					src: ['**/*.{png,jpg,gif}'],
+					dest: '<%= env.options.source.assets %>/img'
+				}]
+			},
+			production: {
+				files: [{
+					expand: true,
+					cwd: '<%= env.options.source.assets %>/img',
+					src: ['**/*.{png,jpg,gif}'],
+					dest: '<%= env.options.production.assets %>/img'
+				}]
+			}
+		},
 
-  // When sails is lifted in production
-  grunt.registerTask('prod', [
-    'clean:dev',
-    'jst:dev',
-    'compass',
-    'copy:dev',
-    'concat',
-    'uglify',
-    'cssmin',
-    'sails-linker:prodJs',
-    'sails-linker:prodStyles',
-    'sails-linker:devTpl',
-    'sails-linker:prodJsJADE',
-    'sails-linker:prodStylesJADE',
-    'sails-linker:devTplJADE'
-  ]);
+		/**
+		 * Copy over our files. We'll run tasks based off the copies.
+		 * See documentation for the copy plugin:
+		 * https://github.com/gruntjs/grunt-contrib-copy
+		 */
+		copy: {
+			development: {
+				files: [
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['fonts/**/*'], 
+						dest: '<%= env.options.development.assets %>'
+					},
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['img/**/*'], 
+						dest: '<%= env.options.development.assets %>'
+					},
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['js/**/*'], 
+						dest: '<%= env.options.development.assets %>'
+					}
+				]
+			},
+			staging: {
+				files: [
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['fonts/**/*'], 
+						dest: '<%= env.options.staging.assets %>'
+					},
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['img/**/*'], 
+						dest: '<%= env.options.staging.assets %>'
+					},
+					// We're currently configured to minify and concatenate our js files 
+					// for staging, this gives us the option to continue using non-concatenated versions
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['js/**/*'], 
+						dest: '<%= env.options.staging.assets %>'
+					}
+				]
+			},
+			production: {
+				files: [
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['fonts/**/*'], 
+						dest: '<%= env.options.production.assets %>'
+					},
+					{ 
+						expand: true, 
+						cwd: '<%= env.options.source.assets %>', 
+						src: ['img/**/*'], 
+						dest: '<%= env.options.production.assets %>'
+					}
+				]
+			},
 
-  // When API files are changed:
-  grunt.event.on('watch', function(action, filepath) {
-    grunt.log.writeln(filepath + ' has ' + action);
+			// We don't want to minify or concatenate these in development, so we'll
+			// copy them over in a watch task. They're already included in the `grunt` task
+			scripts: {
+				files: [
+					{
+						expand: true,
+						cwd: '<%= env.options.source.assets %>',
+						src: ['js/**/*'],
+						dest: '<%= env.options.development.assets %>'
+					}
+				]
+			}
+		},
 
-    // Send a request to a development-only endpoint on the server
-    // which will reuptake the file that was changed.
-    var baseurl = grunt.option('baseurl');
-    var gruntSignalRoute = grunt.option('signalpath');
-    var url = baseurl + gruntSignalRoute + '?action=' + action + '&filepath=' + filepath;
+		/**
+		 * Tasks related to the grunt-contrib-compass plugin.
+		 * See the source on GitHub for documentation: 
+		 * https://github.com/gruntjs/grunt-contrib-compass
+		 */
+		compass: {
+			// Compass' global options
+			options: {
+				importPath: 'bower_components',
+				sassDir: '<%= env.options.source.assets %>/sass',
+				relativeAssets: true,
+			},
+			development: {
+				options: {
+					cssDir: '<%= env.options.development.assets %>/css',
+					fontsPath: '<%= env.options.development.assets %>/fonts',
+					imagesPath: '<%= env.options.development.assets %>/img',
+					outputStyle: 'expanded'
+				}
+			},
+			staging: {
+				options: {
+					cssDir: '<%= env.options.staging.assets %>/css',
+					fontsPath: '<%= env.options.staging.assets %>/fonts',
+					imagesPath: '<%= env.options.staging.assets %>/img',
+					outputStyle: 'compact',
+					force: true
+				}
+			},
+			production: {
+				options: {
+					cssDir: '<%= env.options.production.assets %>/css',
+					fontsPath: '<%= env.options.production.assets %>/fonts',
+					imagesPath: '<%= env.options.production.assets %>/img',
+					environment: 'production',
+					outputStyle: 'compressed',
+					noLineComments: true,
+					force: true
+				}
+			},
+		},
 
-    require('http').get(url)
-    .on('error', function(e) {
-      console.error(filepath + ' has ' + action + ', but could not signal the Sails.js server: ' + e.message);
-    });
-  });
+
+		/** 
+		 * Let's check our files, yo! No reason to get sloppy with our JS.
+		 * See the source on Github for documentation: 
+		 * https://github.com/gruntjs/grunt-contrib-jshint
+		 *
+		 * In our options we can set values to true which tells jshint to ignore warnings
+		 * for those errors.
+		 * See the jshint documentation to set options for specific error types:
+		 * http://www.jshint.com/docs/options/
+		 */
+		jshint: {
+			options: {
+				smarttabs: true
+			},
+			others: ['<%= env.options.source.assets %>/js/**/*.js'],
+			gruntfile: {
+				options: {},
+				files: {
+					src: ['Gruntfile.js']
+				}
+			}
+		},
+
+
+		/**
+		 * Tasks related to the grunt-contrib-uglify plugin.
+		 * See the source on Github for documentation: 
+		 * https://github.com/gruntjs/grunt-contrib-uglify
+		 */
+		uglify: {
+			options: {
+				banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
+						'<%= grunt.template.today("yyyy-mm-dd, h:MM:ss TT") %> */\n',
+				beautify: true,
+			},
+			staging: {
+				options: {
+					// output the source name above each file when on staging
+					beautify: true
+				},
+				files: {
+					'<%= env.options.staging.assets %>/js/app.min.js': [
+						// Files will be concatenated in the order of this array.
+						// You can also ignore files or glob only files that match certain names.
+						// Grunt supports minimatch if you're curious about the possibilities:
+						// https://github.com/isaacs/minimatch
+						'<%= env.options.source.assets %>/js/**/*.js'
+					]
+				}
+			},
+			production: {
+				options: {
+					// Let us know how well uglify is performing when we build for production
+					report: 'gzip',
+					beautify: false,
+					mangle: {
+						// Don't want some a variable mangled? No prob!
+						except: ['jQuery', 'SuperObviousVariableExample']
+					}
+				},
+				files: {
+					'<%= env.options.production.assets %>/js/app.min.js': [
+						// Files will be concatenated in the order of this array.
+						'<%= env.options.source.assets %>/js/**/*.js'
+					]
+				}
+			}
+		},
+
+
+		/**
+		 * Aaaand finally we'll set up our watch event. We'll load in the livereload JavaScript with our 
+		 * preprocess task. It's currently only set to load in development mode.
+		 * 
+		 * You'll also find a method below our config that makes sure we only change
+		 * files that were edited, rather than all of them.
+		 * See the source on Github for documentation:
+		 * https://github.com/gruntjs/grunt-contrib-watch
+		 */
+		watch: {
+			gruntfile: {
+				files: 'Gruntfile.js',
+				tasks: ['jshint:gruntfile'],
+			},
+			scripts: {
+				files: ['<%= env.options.source.assets %>/**/*.js'],
+				tasks: ['jshint:others', 'copy:scripts'],
+			},
+			compass: {
+				files: ['<%= env.options.source.assets %>/sass/**/*.{scss,sass}'],
+				tasks: ['compass:development'],
+			},
+			source: {
+				files: [
+					'<%= env.options.source.root %>/**/*!{.js,.scss,.sass,.jpg,.gif,.png,.svg}',
+					'<%= env.options.source.root %>/**/*'
+				],
+				tasks: ['env:development', 'preprocess:development']
+			},
+			livereload: {
+				options: { 
+					livereload: true 
+				},
+				files: [
+					'<%= env.options.development.assets %>/img/**/*.{png,jpg,jpeg,gif,webp,svg}',
+					'<%= env.options.development.assets %>/css/styles.css', 
+					'<%= env.options.development.assets %>/js/**/*.js', 
+					'<%= env.options.development.root %>/**/*.html', 
+					'<%= env.options.development.root %>/**/*.php', 
+				]
+			}
+		}
+	});
+
+
+	/**
+	 * Let's assume that we'll be developing most often so we'll make that our default task.
+	 */
+	grunt.registerTask('default', 
+		[
+			'env:development',
+			'jshint:others',
+			'compass:development',
+			'copy:development',
+			'copy:scripts',
+			'preprocess:development'
+		]
+	);
+
+
+	/**
+	 * Our staging compile task
+	 */
+	grunt.registerTask('staging', 
+		[
+			'env:staging',
+			'jshint:others',
+			'compass:staging',
+			'copy:staging',
+			'uglify:staging',
+			'preprocess:staging',
+		]
+	);
+
+
+	/**
+	 * Our production task will do optimizations, minifications, uglifications
+	 */
+	grunt.registerTask('production', 
+		[
+			'env:production',
+			'jshint:others',
+			'svg2png',
+			'imagemin:production',
+			'compass:production',
+			'copy:production',
+			'uglify:production',
+			'preprocess:production',
+		]
+	);
+
+
+	/**
+	 * If you just want modify the images
+	 */
+	grunt.registerTask('images', 
+		[
+			'svg2png',
+			'imagemin:replace',
+		]
+	);
+
+
 };

@@ -20,3 +20,5 @@ node_modules/
 public/js/*
 public/styles/*
 .env
+
+local-config.php
